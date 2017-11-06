@@ -8,6 +8,10 @@ main :: IO ()
 main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
     want [ "target/ac" ]
 
+    "lint" ~> do
+        cmd_ ["hlint", "."]
+        cmd ["yamllint", ".travis.yml"]
+
     "target/ats-cat.tar.gz" %> \_ -> do
         need ["target/ac"]
         cmd (Cwd "target") Shell "tar caf ats-cat.tar.gz ac"

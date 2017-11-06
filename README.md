@@ -7,7 +7,7 @@ example shipped with `ats-anairiats`.
 
 ## The Pitch
 
-Yes, it's really faster than `cat`. `cat` starts to be faster on files of
+Yes, it's really faster than `cat`. `cat` is faster on files of
 1 million lines or more, but at that point it's not really useful as
 a command-line tool.
 

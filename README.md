@@ -9,7 +9,7 @@ example shipped with `ats-anairiats`.
 
 Yes, it's really faster than `cat`. `cat` is faster on files of
 1 million lines or more, but at that point it's not really useful as
-a command-line tool.
+a command-line tool. `ac` also has slightly nicer help.
 
 ## The Anti-Pitch
 

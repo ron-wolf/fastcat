@@ -357,7 +357,7 @@ fn show_tabs(params: &params) : void =
 fn show_nonprinting (params: &params) : void =
   params.show_nonprinting := true
 
-#define PROGRAM_VERSION "ats-cat version 0.1.0\nCopyright (c) 2017 Vanessa McHale\n"
+#define PROGRAM_VERSION "ats-cat version 0.1.1\nCopyright (c) 2017 Vanessa McHale\n"
 fn version() = prerr(PROGRAM_VERSION)
 
 fn help () = (
@@ -375,8 +375,8 @@ Concatenate FILE(s), or standard input, to standard output.
 
 When no file is provided ac will read standard input.
 Examples:
-  ac f g  Output f's contents, then standard input, then g's contents.
-  ac      Copy standard input to standard output.
+  ac file1 file2  Output f's contents, then g's contents.
+  ac              Copy standard input to standard output.
   
 Bug reports and updates at github.com/vmchale/fastcat\n"
 )

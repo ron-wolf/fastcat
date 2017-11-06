@@ -1,3 +1,6 @@
+check:
+    git diff master origin/master
+
 version:
     @grep -P -o '\d+\.\d+\.\d+' src/ac.dats
 

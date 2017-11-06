@@ -243,7 +243,7 @@ fun putchars_quoted
     ats_ptr_type p_cbuf ;
   } envstdoutq_t ;
 
-  ATSinline()
+  //ATSinline()
   ats_void_type
   envstdoutq_initialize (envstdoutq_t *env, params_t *from) {
 
@@ -256,7 +256,7 @@ fun putchars_quoted
 
   }
 
-  ATSinline()
+  //ATSinline()
   ats_void_type
   envstdoutq_uninitialize (envstdoutq_t *env) {
     ATS_FREE (env->p_cbuf) ; return ;

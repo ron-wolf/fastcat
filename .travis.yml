@@ -11,9 +11,18 @@ matrix:
       os: osx
 
 install:
+  - nix-channel --update
   - nix-env -i binutils
   - nix-env -i ats
   - nix-env -i stack
+  - |
+    if [ `uname` == "Linux" ]
+    then
+      curl -sL https://raw.github.com/ndmitchell/hlint/master/misc/travis.sh | sh -s .
+    else
+      echo 'skipping hlint...'
+    fi
+
 script:
   - ./shake.hs
   - mv target/ac ac-$TARGET

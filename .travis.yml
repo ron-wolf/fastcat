@@ -3,11 +3,25 @@ language: nix
 sudo-required: false
 cache:
   - $HOME/.stack
-os:
-  - linux
-  - osx
+matrix:
+  include:
+    - env: TARGET=x86_64-unknown-linux-gnu
+
+    - env: TARGET=x86_64-apple-darwin
+      os: osx
+
 install:
   - nix-env -i ats
   - nix-env -i stack
 script:
   - ./shake.hs
+  - mv target/ac ac-$TARGET
+
+deploy:
+  api_key:
+    secure: "UZzZbsESNEMrc544+Ohhu7GdRNOVcq4e1Uzv4Ntxqb0JlIlgp5Qk72BhLqoNElzrsRFgI4HgDRO/YBiQA+FGiTCdQvh9WXqP65flquMOBWlM6xAEzjh86/tXMcY0DujfUFG18fl497IavQDDBCUzm1XWvrtnHox0QLJkyq8e92QW1Csn9bFM/H5rE1w3/ScrukkcaUO8OVoUXyqYuw5MmqVJB8qOklZoVPUiRBc6jT2IRzDnb2RuNFmVm8CzSwadZ5nknse+ZkmVDRbUlvOLijqAgtlYKGYxTvSKVHv+dO2XJUhJWXZdo6RNOOhGP19b2oemFm4laEjuqKjBtDtXLar2A41X48kmm88rpNxQ4Q44N7heBClT1nshdllrzXJZDlVY7GZQ+smTohg0dRQEAPnmvmq4ZwH9F+pb3P5aF/zuJA1jim+bKZ6flXFlFVzkPNu60MOElhs7K25HUthN+I+Tm85irD43i+YW1B9RlSerRLqB23Bl9Lpm0C/ZbUNpBLWG5zyT+x4yER9dNTL7kCtPsUMx2pexTq04mNcmNmQ1NtJYzCE7qmyNqDBJ4yIbqPD9KBMb6sRkSAsB0QaEdu3lhAcLu9CGWNiVeQfdyyebGocHYQ5I6j9/xpfmY3t23p3ucGhJ/4DLhoW+pzWfW7TOeOhqPur5hK85iUDhRP8="
+  file: ac-$TARGET
+  on:
+    tags: true
+  provider: releases
+  skip_cleanup: true

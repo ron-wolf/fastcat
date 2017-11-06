@@ -1,0 +1,49 @@
+#!/usr/bin/env stack
+-- stack runghc --resolver nightly-2017-11-05 --package shake --install-ghc
+
+import           Development.Shake
+
+main :: IO ()
+main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
+    want [ "target/ac" ]
+
+    "target/ats-cat.tar.gz" %> \_ -> do
+        need ["target/ac"]
+        cmd (Cwd "target") Shell "tar caf ats-cat.tar.gz ac"
+
+    "deploy" ~> do
+        need ["target/ats-cat.tar.gz"]
+        cmd ["cp", "target/ats-cat.tar.gz", "/home/vanessa/programming/rust/nessa-site/static"]
+
+    "shake" %> \_ -> do
+        need ["shake.hs"]
+        cmd_ ["mkdir", "-p", ".shake"]
+        command_ [Cwd ".shake"] "cp" ["../shake.hs", "."]
+        command [Cwd ".shake"] "ghc" ["-O", "shake.hs", "-o", "../shake", "-Wall", "-Werror", "-Wincomplete-uni-patterns", "-Wincomplete-record-updates"]
+
+    "target/ac" %> \_ -> do
+        ats <- getDirectoryFiles "" ["src//*.*ats"]
+        need ats
+        cmd_ ["mkdir", "-p", "target"]
+        command_ [EchoStderr False] "atscc" (ats ++ ["-o", "target/ac", "-O3"])
+        command [] "rm" ["-f", "ac_dats.c"]
+
+    "install" ~> do
+        need ["target/ac"]
+        home <- getEnv "HOME"
+        case home of
+            Just h -> cmd ["cp", "target/ac", h ++ "/.local/bin"]
+            _ -> putNormal "Warning: could not detect home directory; skipping install."
+
+    "bench" ~> do
+        need ["target/ac"]
+        cmd ["bench", "cat shake.hs", "./target/ac shake.hs", "rust-cate shake.hs"]
+
+    "run" ~> do
+        need ["target/ac"]
+        cmd ["./target/ac", "shake.hs"]
+
+    "clean" ~> do
+        removeFilesAfter "." ["//*.c", "tags", "shake", "//*.tar.gz"]
+        removeFilesAfter ".shake" ["//*"]
+        removeFilesAfter "target" ["//*"]

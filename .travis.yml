@@ -1,7 +1,7 @@
 ---
 language: nix
 sudo-required: false
-before:
+before_install:
   - nix-env -i ats
   - nix-env -i stack
 script:

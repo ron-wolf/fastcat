@@ -11,6 +11,7 @@ matrix:
       os: osx
 
 install:
+  - nix-env -i binutils
   - nix-env -i ats
   - nix-env -i stack
 script:

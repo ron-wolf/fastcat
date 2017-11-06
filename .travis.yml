@@ -1,7 +1,12 @@
 ---
 language: nix
 sudo-required: false
-before_install:
+cache:
+  - $HOME/.stack
+os:
+  - linux
+  - osx
+install:
   - nix-env -i ats
   - nix-env -i stack
 script:

@@ -1,5 +1,7 @@
 # ats-cat
 
+[![Build Status](https://travis-ci.org/vmchale/fastcat.svg?branch=master)](https://travis-ci.org/vmchale/fastcat)
+
 `ac` is a modernized, faster version of `cat`. Forked from the `mycat.dats`
 example shipped with `ats-anairiats`.
 

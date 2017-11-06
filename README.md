@@ -19,7 +19,7 @@ available for x86\_64 Linux and OS X.
 ## Building
 
 `ats-cat` uses [shake](http://shakebuild.com/) as its build system. I recommend
-installing [nix](curl https://nixos.org/nix/install | sh), in which case you can
+installing [nix](https://nixos.org/nix/), in which case you can
 install `stack` (for the build system) and `atscc` (the ATS compiler) with the
 following:
 

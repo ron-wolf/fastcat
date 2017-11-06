@@ -14,7 +14,7 @@ a command-line tool.
 ## The Anti-Pitch
 
 Slightly fewer features and worse support. Also, binaries are currently only
-available for x86\_64 Linux and OS X.
+available for x86\_64 Linux.
 
 ## Building
 

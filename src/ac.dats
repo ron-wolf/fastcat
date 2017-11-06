@@ -376,7 +376,9 @@ Concatenate FILE(s), or standard input, to standard output.
 When no file is provided ac will read standard input.
 Examples:
   ac f g  Output f's contents, then standard input, then g's contents.
-  ac      Copy standard input to standard output.\n"
+  ac      Copy standard input to standard output.
+  
+Bug reports and updates at github.com/vmchale/fastcat\n"
 )
 
 // suppose that current parameter is a file path to cat()

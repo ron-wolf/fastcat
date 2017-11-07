@@ -11,9 +11,18 @@ Yes, it's really faster than `cat`. `cat` is faster on files of
 1 million lines or more, but at that point it's not really useful as
 a command-line tool. `ac` also has slightly nicer help.
 
+### Benchmarks
+
+| Tool | Language | Target | Time |
+| ---- | -------- | ------ | ---- |
+| ac   | ATS | `shake.hs` | 781.7 μs |
+| cat  | C | `shake.hs` | 954.9 μs |
+| rust-cate | Rust | `shake.hs` | 1.328 ms |
+| hcat | Haskell | `shake.hs` | 1.468 ms |
+
 ## The Anti-Pitch
 
-Slightly fewer features and worse support. Also, binaries are currently only
+Slightly fewer features and less support. Also, binaries are currently only
 available for x86\_64 Linux.
 
 ## Building

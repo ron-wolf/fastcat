@@ -8,6 +8,10 @@ main :: IO ()
 main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
     want [ "target/ac" ]
 
+    "target/hcat" %> \_ -> do
+        need ["hs/cat.hs"]
+        cmd ["ghc", "-O", "hs/cat.hs", "-o", "target/hcat"]
+
     "lint" ~> do
         cmd_ ["hlint", "."]
         cmd ["yamllint", ".travis.yml"]
@@ -30,7 +34,7 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
         ats <- getDirectoryFiles "" ["src//*.*ats"]
         need ats
         cmd_ ["mkdir", "-p", "target"]
-        command_ [EchoStderr False] "atscc" (ats ++ ["-o", "target/ac", "-O3"])
+        command_ [EchoStderr False] "atscc" (ats ++ ["-o", "target/ac", "-O3"]) -- -DATS_MEMALLOC_LIBC
         command [] "rm" ["-f", "ac_dats.c"]
 
     "install" ~> do
@@ -41,14 +45,15 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
             _ -> putNormal "Warning: could not detect home directory; skipping install."
 
     "bench" ~> do
-        need ["target/ac"]
-        cmd ["bench", "cat shake.hs", "./target/ac shake.hs", "rust-cate shake.hs"]
+        need ["target/ac", "target/hcat"]
+        cmd ["bench", "cat shake.hs", "./target/ac shake.hs", "rust-cate shake.hs", "./target/hcat shake.hs"]
 
-    "run" ~> do
+    -- TODO capture output & compare?
+    "test" ~> do
         need ["target/ac"]
         cmd ["./target/ac", "shake.hs"]
 
     "clean" ~> do
-        removeFilesAfter "." ["//*.c", "tags", "shake", "//*.tar.gz"]
+        removeFilesAfter "." ["//*.c", "//*.hi", "//*.o", "tags", "shake", "//*.tar.gz"]
         removeFilesAfter ".shake" ["//*"]
         removeFilesAfter "target" ["//*"]

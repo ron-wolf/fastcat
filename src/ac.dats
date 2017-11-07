@@ -21,6 +21,9 @@ fun{env:viewt@ype}
   putchars {n:nat} {n1:nat | n1 <= n}
     (env: &env, buf: &bytes(n), n1: size_t n1): void
 
+// catloop takes a buffer, its size, and two proofs as arguments. The proofs
+// guarantee that values of type 'env1' and 'env2' exist at the appropriate
+// locations, and that we can peek at the value safely.
 fun{env1,env2:viewt@ype}
   catloop {n:nat} (
       env1: &env1, env2: &env2
@@ -116,6 +119,7 @@ implement
     in // nothing
 end
 
+// just dump the output (buffered of course)
 fun readout_raw {fd:int} (
   pf: !fildes_v fd | fd: int fd
 ) : void =
@@ -209,7 +213,7 @@ fun putchars_quoted
   {n:int}
   {n1,i:nat | i <= n1; n1 <= n}
   {l0:addr} {l:addr | l <= l0+CBUFSZ} (
-    pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0) 
+    pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0)
       | params: &params
       , cs: &bytes(n), n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l
   ) : void =
@@ -243,7 +247,7 @@ fun putchars_quoted
     ats_ptr_type p_cbuf ;
   } envstdoutq_t ;
 
-  //ATSinline()
+  ATSinline()
   ats_void_type
   envstdoutq_initialize (envstdoutq_t *env, params_t *from) {
 
@@ -256,7 +260,7 @@ fun putchars_quoted
 
   }
 
-  //ATSinline()
+  ATSinline()
   ats_void_type
   envstdoutq_uninitialize (envstdoutq_t *env) {
     ATS_FREE (env->p_cbuf) ; return ;

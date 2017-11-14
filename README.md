@@ -13,12 +13,12 @@ a command-line tool. `ac` also has slightly nicer help.
 
 ### Benchmarks
 
-| Tool | Language | Target | Time |
+| Tool | Language/Compiler | Target | Time |
 | ---- | -------- | ------ | ---- |
 | ac   | ATS | `shake.hs` | 781.7 μs |
-| cat  | C | `shake.hs` | 954.9 μs |
-| rust-cate | Rust | `shake.hs` | 1.328 ms |
-| hcat | Haskell | `shake.hs` | 1.468 ms |
+| cat  | C (gcc) | `shake.hs` | 954.9 μs |
+| hcat | Haskell (ghc) | `shake.hs` | 1.468 ms |
+| hcat-jhc | Haskell (jhc) | `shake.hs` | 995.2 μs |
 
 ## The Anti-Pitch
 

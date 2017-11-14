@@ -1,2 +1,3 @@
 import           System.Environment (getArgs)
-main = putStrLn =<< readFile =<< (head <$> getArgs)
+import           Control.Monad      ((<=<))
+main = traverse (putStrLn <=< readFile) =<< getArgs

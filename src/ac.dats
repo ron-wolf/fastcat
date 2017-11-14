@@ -23,7 +23,7 @@ fun{env:viewt@ype}
 
 // catloop takes a buffer, its size, and two proofs as arguments. The proofs
 // guarantee that values of type 'env1' and 'env2' exist at the appropriate
-// locations, and that we can peek at the value safely.
+// locations and that we can peek at the value safely.
 fun{env1,env2:viewt@ype}
   catloop {n:nat} (
       env1: &env1, env2: &env2
@@ -42,15 +42,17 @@ typedef struct {
   int show_ends ;
   int show_tabs ;
   int show_nonprinting ;
+  int strip_ansi ;
 } params_t ;
 %}
 typedef params =
   // a data type for our command-line options
   $extype_struct
     "params_t" of {
-      show_ends = bool,     // display $ at end of each line
-      show_tabs=bool,       // display TAB characters as ^I
-      show_nonprinting=bool // use ^ and M- notation, except for LFD and TAB
+      show_ends = bool,      // display $ at end of each line
+      show_tabs=bool,        // display TAB characters as ^I
+      show_nonprinting=bool, // use ^ and M- notation, except for LFD and TAB
+      strip_ansi=bool        // strip ansi escape codes
     }
 
 extern
@@ -64,6 +66,7 @@ params_copy
     val () = to.show_ends := from.show_ends
     val () = to.show_tabs := from.show_tabs
     val () = to.show_nonprinting := from.show_nonprinting
+    val () = to.strip_ansi := from.strip_ansi
 }
 
 fn quote_output
@@ -81,7 +84,7 @@ struct {
 viewtypedef
 envinp (fd:int) =
   $extype_struct "envinp_t" of {
-    fildes= int (fd) // file descriptor
+    fildes= int (fd)        // file descriptor
   , fildes_v= fildes_v (fd) // file descriptor view
   }
 
@@ -178,6 +181,33 @@ extern
     ) : void =
       "mac#cbuf_clearall"
 
+fun putchar_stripped_buf
+  {n:nat}
+  {l0:addr}
+  {l:addr | l + 4 <= l0 + n} (
+    pfbuf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l)
+      | params: &params, b: char, p0: ptr l0, p: ptr l
+  ) : #[l:addr | l <= l0+n] ptr l =
+    let
+      #define i2c char_of_int
+      val ch = int_of_uchar ((uchar_of_char)b)
+      macdef putc (p, c) = cbuf_putchar (pfbuf | ,(p), ,(c))
+    in
+      case+ 0 of
+        | _ when ch < 32 => begin
+          case+ b of
+            | '\t' when ~params.show_tabs => (putc(p, '\t'); p+1)
+            | '\n' => (putc(p, '$') ; putc(p+1, '\n'); p+2)
+            | '\[' => (p)
+            | '3' => (p)
+            | '7' => (p)
+            | '0' => (p)
+            | 'm' => (p)
+            | _ => (p)
+          end
+        | _ => ( putc (p, b); p+1 )
+end
+
 fun putchar_quoted_buf
   {n:nat}
   {l0:addr}
@@ -208,6 +238,39 @@ end
 #define CBUFSZ 4096
 %}
 #define CBUFSZ 4096
+
+fun putchars_stripped
+  {n:int}
+  {n1,i:nat | i <= n1; n1 <= n}
+  {l0:addr} {l:addr | l <= l0+CBUFSZ} (
+    pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0)
+      | params: &params
+      , cs: &bytes(n), n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l
+  ) : void =
+    if i < n1 then
+      let
+        // TODO parser for this
+        val b = (char_of_byte)cs.[i]
+      in
+        if p + 4 <= p0 + CBUFSZ then
+          let
+            val p = putchar_stripped_buf (pfbuf | params, b, p0, p)
+          in
+            putchars_stripped (pfbuf | params, cs, n1, i+1, p0, p)
+        end
+        else
+          let
+            val () = cbuf_clearall (pfbuf | p0, p)
+            val p = putchar_stripped_buf (pfbuf | params, b, p0, p0)
+          in
+            putchars_stripped (pfbuf | params, cs, n1, i+1, p0, p)
+          end
+    end 
+    else
+      let
+        val () = cbuf_clearall (pfbuf | p0, p)
+      in // nothing
+    end
 
 fun putchars_quoted
   {n:int}
@@ -360,6 +423,8 @@ fn show_tabs(params: &params) : void =
   params.show_tabs := true
 fn show_nonprinting (params: &params) : void =
   params.show_nonprinting := true
+fn strip_ansi (params: &params) : void =
+  params.strip_ansi := true
 
 #define PROGRAM_VERSION "ats-cat version 0.1.1\nCopyright (c) 2017 Vanessa McHale\n"
 fn version() = prerr(PROGRAM_VERSION)
@@ -374,6 +439,7 @@ Concatenate FILE(s), or standard input, to standard output.
     -t                       equivalent to -vT
     -T, --show-tabs          display TAB characters as ^I
     -v, --show-nonprinting   use ^ and M- notation, except for LFD and TAB
+    -s, --strip-ansi         strip ANSI codes
     -V, --version            show version information
     -h, --help               display this help and exit
 
@@ -431,6 +497,8 @@ fun parse_non_file_parameters
       | "--show-tabs" => ( show_tabs(params); false; )
       | "-v" => ( show_nonprinting(params); false; )
       | "--show-nonprinting" => ( show_nonprinting(params); false; )
+      | "-s" => ( strip_ansi(params); false; )
+      | "--strip-ansi" => ( strip_ansi(params); false; )
       | _ => true
 end
 
@@ -459,6 +527,7 @@ main(argc, argv) =
     val () = params.show_ends := false
     val () = params.show_tabs := false
     val () = params.show_nonprinting := false
+    val () = params.strip_ansi := false
   in
     if argc = 1 then
       cat_stdin(params)

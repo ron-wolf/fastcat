@@ -74,6 +74,7 @@ fn quote_output
     params.show_ends
       || params.show_tabs
       || params.show_nonprinting
+      || params.strip_ansi
 
 %{^
 typedef
@@ -197,7 +198,7 @@ fun putchar_stripped_buf
         | _ when ch < 32 => begin
           case+ b of
             | '\t' when ~params.show_tabs => (putc(p, '\t'); p+1)
-            | '\n' => (putc(p, '$') ; putc(p+1, '\n'); p+2)
+            | '\n' => (putc(p, '\n') ; p+1)
             | _ => (p)
           end
         | _ => ( putc (p, b); p+1 )
@@ -234,20 +235,41 @@ end
 %}
 #define CBUFSZ 4096
 
+// helper
+fun is_zero(n: int) : bool =
+  case n of
+    | 0 => true
+    | _ => false
+
+// helper for parser
+fun is_digit(c: char) : bool =
+  case c of
+    | '0' => true
+    | '1' => true
+    | '2' => true
+    | '3' => true
+    | '4' => true
+    | '5' => true
+    | '6' => true
+    | '7' => true
+    | '8' => true
+    | '9' => true
+    | _ => false
+
+// helper for parser
 fun skip_char(b: char) : bool =
   let
     val ch = int_of_uchar ((uchar_of_char)b)
   in
     case+ 0 of
       | _ when ch < 32 => begin
-        case+ b of
+        case b of
           | '\t' => false
           | '\n' => false
           | _ => true
         end
       | _ => false
   end
-
 
 fun putchars_stripped
   {n:int}
@@ -261,7 +283,7 @@ fun putchars_stripped
       let
         val b = (char_of_byte)cs.[i]
       in
-        if not(skip_char(b)) then
+        if not(skip_char(b)) && is_zero(skip_count) then
           if p + 4 <= p0 + CBUFSZ then
             let
               // b is the char; skip at least 3-4 bytes?
@@ -276,10 +298,13 @@ fun putchars_stripped
             in
               putchars_stripped (pfbuf | params, 0, cs, n1, i+1, p0, p)
           end
+        else if not(skip_char(b)) && not(is_digit(b)) then
+          putchars_stripped (pfbuf | params, skip_count - 1, cs, n1, i+1, p0, p)
+        else if not(skip_char(b)) then
+          putchars_stripped (pfbuf | params, skip_count, cs, n1, i+1, p0, p)
         else
-          putchars_stripped (pfbuf | params, 4, cs, n1, i+1, p0, p)
-        //end
-    end
+          putchars_stripped (pfbuf | params, 2, cs, n1, i+1, p0, p)
+        end
     else
       let
         val () = cbuf_clearall (pfbuf | p0, p)
@@ -379,7 +404,11 @@ in
     let
       val (pfout | p0) = envstdoutq_get_cbuf (env)
       prval (pf, fpf) = $UNSAFE.viewout_decode (pfout)
-      val () = putchars_quoted (pf | env.params, cs, n1, 0, p0, p0)
+      val () =
+        if env.params.strip_ansi then
+          putchars_stripped (pf | env.params, 0, cs, n1, 0, p0, p0)
+        else
+        putchars_quoted (pf | env.params, cs, n1, 0, p0, p0)
       prval () = fpf (pf)
     in // nothing
   end

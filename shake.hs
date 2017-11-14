@@ -46,7 +46,7 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
 
     "bench" ~> do
         need ["target/ac", "target/hcat"]
-        cmd ["bench", "cat shake.hs", "./target/ac shake.hs", "rust-cate shake.hs", "./target/hcat shake.hs"]
+        cmd ["bench", "cat shake.hs", "./target/ac shake.hs", "rust-cate shake.hs", "./target/hcat shake.hs", "ac --show-nonprinting colors", "cat --show-nonprinting colors"]
 
     -- TODO capture output & compare?
     "test" ~> do

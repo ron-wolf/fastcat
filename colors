@@ -1,0 +1,11 @@
+Type checking /tmp/idris15797-0.idr
+WARNING: There are incomplete holes:
+ [Lazy_matrices.Lib.adjoint_hole,Lazy_matrices.Lib.hole,Control.Permutation.Mod.head_hole]
+
+Evaluation of any of these will crash at run time.
+[37m  determinant[0m
+[37m    + should yield the correct determinant[0m
+[37m    + should be a homomorphism, sort of[0m
+[37m    + should return 1 for the identity matrix[0m
+
+[32m  Passed: Total = 3, Failed = 0, Pending = 0[0m

@@ -9,7 +9,8 @@ example shipped with `ats-anairiats`.
 
 Yes, it's really faster than `cat`. `cat` is faster on files of
 1 million lines or more, but at that point it's not really useful as
-a command-line tool. `ac` also has slightly nicer help.
+a command-line tool. `ac` also has slightly nicer help, and it can optionally
+strip ANSI escape codes.
 
 ### Benchmarks
 
@@ -18,7 +19,6 @@ a command-line tool. `ac` also has slightly nicer help.
 | ac   | ATS | `shake.hs` | 781.7 μs |
 | cat  | C (gcc) | `shake.hs` | 954.9 μs |
 | hcat | Haskell (ghc) | `shake.hs` | 1.468 ms |
-| hcat-jhc | Haskell (jhc) | `shake.hs` | 995.2 μs |
 
 ## The Anti-Pitch
 

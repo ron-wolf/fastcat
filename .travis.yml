@@ -23,7 +23,7 @@ install:
     fi
 
 script:
-  - ./shake.hs
+  - ./shake.hs test
   - mv target/ac ac-$TARGET
 
 deploy:

@@ -7,10 +7,8 @@ example shipped with `ats-anairiats`.
 
 ## The Pitch
 
-Yes, it's really faster than `cat`. `cat` is faster on files of
-1 million lines or more, but at that point it's not really useful as
-a command-line tool. `ac` has slightly nicer help, and it can optionally
-strip ANSI escape codes.
+Yes, it's really faster than `cat`. `ac` also has slightly nicer help, and it
+can optionally strip ANSI escape codes.
 
 ### Benchmarks
 
@@ -22,7 +20,7 @@ strip ANSI escape codes.
 
 ## The Anti-Pitch
 
-Some missing features and less support. Also, binaries are currently only
+Some missing features and less support. Binaries are currently only
 available for x86\_64 Linux.
 
 ## Building

@@ -1,8 +1,11 @@
 #!/usr/bin/env stack
--- stack runghc --resolver nightly-2017-11-14 --package shake --install-ghc
+-- stack runghc --resolver nightly-2017-11-14 --package shake --package hspec --install-ghc
 -- --no-terminal
+-- vi:syntax=hspec
 
+import           Control.Monad     (void)
 import           Development.Shake
+import           Test.HUnit
 
 main :: IO ()
 main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
@@ -46,12 +49,14 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
 
     "bench" ~> do
         need ["target/ac", "target/hcat"]
-        cmd ["bench", "cat shake.hs", "./target/ac shake.hs", "rust-cate shake.hs", "./target/hcat shake.hs", "ac --show-nonprinting colors", "cat --show-nonprinting colors"]
+        cmd ["bench", "cat shake.hs", "./target/ac shake.hs", "rust-cate shake.hs", "./target/hcat shake.hs", "ac --show-nonprinting colors", "cat --show-nonprinting colors", "ac --strip-ansi colors", "cat colors | perl -pe 's/\\e\\[?.*?[\\@-~]//g'"]
 
-    -- TODO capture output & compare?
     "test" ~> do
         need ["target/ac"]
-        cmd ["./target/ac", "shake.hs"]
+        (Stdout out) <- command [] "./target/ac" ["shake.hs"]
+        expected <- liftIO $ readFile "shake.hs"
+        let test1 = TestCase (assertEqual "shake.hs" expected out)
+        void $ liftIO $ runTestTT test1
 
     "clean" ~> do
         removeFilesAfter "." ["//*.c", "//*.hi", "//*.o", "tags", "shake", "//*.tar.gz"]

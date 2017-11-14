@@ -198,11 +198,6 @@ fun putchar_stripped_buf
           case+ b of
             | '\t' when ~params.show_tabs => (putc(p, '\t'); p+1)
             | '\n' => (putc(p, '$') ; putc(p+1, '\n'); p+2)
-            | '\[' => (p)
-            | '3' => (p)
-            | '7' => (p)
-            | '0' => (p)
-            | 'm' => (p)
             | _ => (p)
           end
         | _ => ( putc (p, b); p+1 )
@@ -239,33 +234,52 @@ end
 %}
 #define CBUFSZ 4096
 
+fun skip_char(b: char) : bool =
+  let
+    val ch = int_of_uchar ((uchar_of_char)b)
+  in
+    case+ 0 of
+      | _ when ch < 32 => begin
+        case+ b of
+          | '\t' => false
+          | '\n' => false
+          | _ => true
+        end
+      | _ => false
+  end
+
+
 fun putchars_stripped
   {n:int}
   {n1,i:nat | i <= n1; n1 <= n}
   {l0:addr} {l:addr | l <= l0+CBUFSZ} (
     pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0)
-      | params: &params
+      | params: &params, skip_count: int
       , cs: &bytes(n), n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l
   ) : void =
     if i < n1 then
       let
-        // TODO parser for this
         val b = (char_of_byte)cs.[i]
       in
-        if p + 4 <= p0 + CBUFSZ then
-          let
-            val p = putchar_stripped_buf (pfbuf | params, b, p0, p)
-          in
-            putchars_stripped (pfbuf | params, cs, n1, i+1, p0, p)
-        end
-        else
-          let
-            val () = cbuf_clearall (pfbuf | p0, p)
-            val p = putchar_stripped_buf (pfbuf | params, b, p0, p0)
-          in
-            putchars_stripped (pfbuf | params, cs, n1, i+1, p0, p)
+        if not(skip_char(b)) then
+          if p + 4 <= p0 + CBUFSZ then
+            let
+              // b is the char; skip at least 3-4 bytes?
+              val p = putchar_stripped_buf (pfbuf | params, b, p0, p)
+            in
+              putchars_stripped (pfbuf | params, 0, cs, n1, i+1, p0, p)
           end
-    end 
+          else
+            let
+              val () = cbuf_clearall (pfbuf | p0, p)
+              val p = putchar_stripped_buf (pfbuf | params, b, p0, p0)
+            in
+              putchars_stripped (pfbuf | params, 0, cs, n1, i+1, p0, p)
+          end
+        else
+          putchars_stripped (pfbuf | params, 4, cs, n1, i+1, p0, p)
+        //end
+    end
     else
       let
         val () = cbuf_clearall (pfbuf | p0, p)

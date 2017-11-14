@@ -1,5 +1,5 @@
 #!/usr/bin/env stack
--- stack runghc --resolver nightly-2017-11-05 --package shake --install-ghc
+-- stack runghc --resolver nightly-2017-11-14 --package shake --install-ghc
 -- --no-terminal
 
 import           Development.Shake

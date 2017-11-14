@@ -254,6 +254,7 @@ fun is_digit(c: char) : bool =
     | '7' => true
     | '8' => true
     | '9' => true
+    | ';' => true
     | _ => false
 
 // helper for parser

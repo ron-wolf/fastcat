@@ -494,6 +494,19 @@ Examples:
 Bug reports and updates at github.com/vmchale/fastcat\n"
 )
 
+fun should_help
+  {n: int | n >= 1}
+  {m: nat | m < n}
+  (argc: int n, argv: &(@[string][n]), current: int m) : bool =
+  let
+    val path = string1_of_string (argv.[current])
+  in
+    if current < argc - 1 then
+      path = "--help" || should_help(argc, argv, current + 1)
+    else
+      path = "--help"
+  end
+
 // suppose that current parameter is a file path to cat()
 fun parse_file_path
   {n:int | n >= 1}
@@ -506,7 +519,10 @@ fun parse_file_path
     val () = assert_errmsg_bool1 (
       gte_size1_int1(string1_length(path),1),"path must contain at least one character"
     )
-    val () = cat_file(params, path)
+    val () =
+      if not(should_help(argc, argv, 0)) then 
+        cat_file(params, path) 
+      else ( help() ; exit(0) ;)
     val next = current+1
   in
     if next = argc then

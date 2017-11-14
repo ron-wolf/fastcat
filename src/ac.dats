@@ -502,9 +502,9 @@ fun should_help
     val path = string1_of_string (argv.[current])
   in
     if current < argc - 1 then
-      path = "--help" || should_help(argc, argv, current + 1)
+      path = "--help" || path = "-h" || should_help(argc, argv, current + 1)
     else
-      path = "--help"
+      path = "--help" || path = "-h"
   end
 
 // suppose that current parameter is a file path to cat()

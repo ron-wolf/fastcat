@@ -49,13 +49,13 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
 
     "bench" ~> do
         need ["target/ac", "target/hcat"]
-        cmd ["bench", "cat shake.hs", "./target/ac shake.hs", "rust-cate shake.hs", "./target/hcat shake.hs", "ac --show-nonprinting colors", "cat --show-nonprinting colors", "ac --strip-ansi colors", "cat colors | perl -pe 's/\\e\\[?.*?[\\@-~]//g'"]
+        cmd ["bench", "cat shake.hs", "./target/ac shake.hs", "./target/hcat shake.hs", "ac --show-nonprinting colors", "cat --show-nonprinting colors"]
 
     "test" ~> do
         need ["target/ac"]
-        (Stdout out) <- command [] "./target/ac" ["shake.hs"]
-        expected <- liftIO $ readFile "shake.hs"
-        let test1 = TestCase (assertEqual "shake.hs" expected out)
+        (Stdout out) <- command [] "./target/ac" ["colors"]
+        expected <- liftIO $ readFile "colors"
+        let test1 = TestCase (assertEqual "colors" expected out)
         void $ liftIO $ runTestTT test1
 
     "clean" ~> do

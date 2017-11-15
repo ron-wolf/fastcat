@@ -37,7 +37,7 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
         ats <- getDirectoryFiles "" ["src//*.*ats"]
         need ats
         cmd_ ["mkdir", "-p", "target"]
-        command_ [EchoStderr False] "atscc" (ats ++ ["-o", "target/ac", "-O3"]) -- -DATS_MEMALLOC_LIBC
+        command_ [EchoStderr False] "atscc" (ats ++ ["-o", "target/ac", "-O3", "-mtune=native"]) -- -DATS_MEMALLOC_LIBC
         command [] "rm" ["-f", "ac_dats.c"]
 
     "install" ~> do
@@ -49,7 +49,20 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
 
     "bench" ~> do
         need ["target/ac", "target/hcat"]
-        cmd ["bench", "cat shake.hs", "./target/ac shake.hs", "./target/hcat shake.hs", "ac --show-nonprinting colors", "cat --show-nonprinting colors"]
+        cmd
+            [ "bench"
+            , "cat shake.hs"
+            , "./target/ac shake.hs"
+            , "./target/hcat shake.hs"
+            , "ac --show-nonprinting colors"
+            , "cat --show-nonprinting colors"
+            , "ac colors | perl -pe 's/\\e\\[?.*?[\\@-~]//g'"
+            , "ac colors | strip-ansi"
+            , "ac colors | sed -r \"s/\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g\""
+            , "ac colors | python3 py/strip-ansi.py"
+            , "ac colors | ansifilter"
+            , "ac colors | ac -s colors"
+            ]
 
     "test" ~> do
         need ["target/ac"]

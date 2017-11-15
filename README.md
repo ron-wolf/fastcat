@@ -18,6 +18,9 @@ can optionally strip ANSI escape codes.
 | cat  | C (gcc) | `shake.hs` | 954.9 μs |
 | hcat | Haskell (ghc) | `shake.hs` | 1.468 ms |
 
+`ac` is also the [fastest way](http://blog.vmchale.com/article/strip-benchmarks)
+to strip ANSI escape codes from program output.
+
 ## The Anti-Pitch
 
 Some missing features and less support. Binaries are currently only

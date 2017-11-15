@@ -190,18 +190,9 @@ fun putchar_stripped_buf
       | params: &params, b: char, p0: ptr l0, p: ptr l
   ) : #[l:addr | l <= l0+n] ptr l =
     let
-      #define i2c char_of_int
-      val ch = int_of_uchar ((uchar_of_char)b)
       macdef putc (p, c) = cbuf_putchar (pfbuf | ,(p), ,(c))
     in
-      case+ 0 of
-        | _ when ch < 32 => begin
-          case+ b of
-            | '\t' when ~params.show_tabs => (putc(p, '\t'); p+1)
-            | '\n' => (putc(p, '\n') ; p+1)
-            | _ => (p)
-          end
-        | _ => ( putc (p, b); p+1 )
+      ( putc (p, b); p+1 )
 end
 
 fun putchar_quoted_buf

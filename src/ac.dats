@@ -460,7 +460,7 @@ fn show_nonprinting (params: &params) : void =
 fn strip_ansi (params: &params) : void =
   params.strip_ansi := true
 
-#define PROGRAM_VERSION "ats-cat version 0.1.2\nCopyright (c) 2017 Vanessa McHale\n"
+#define PROGRAM_VERSION "ats-cat version 0.1.3\nCopyright (c) 2017 Vanessa McHale\n"
 fn version() = prerr(PROGRAM_VERSION)
 
 fn help () = (

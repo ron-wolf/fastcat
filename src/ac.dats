@@ -549,7 +549,7 @@ fun parse_file_path
     if next = argc then
       ()
   else
-    parse_parameters(params, true, argc, argv, next)
+    parse_file_path(params, argc, argv, next)
 end
 
 and parse_parameters

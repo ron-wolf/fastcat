@@ -1,7 +1,7 @@
 with import <nixpkgs>{};
 
 stdenv.mkDerivation {
-  name = "ac-0.1.2";
+  name = "ac-0.1.3";
   src = fetchgit {
     url = "https://github.com/vmchale/fastcat";
     rev = "5031c47631ea5a31d4eb8a584c8226a698453125";

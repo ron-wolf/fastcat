@@ -185,7 +185,7 @@ extern
 fun putchar_stripped_buf
   {n:nat}
   {l0:addr}
-  {l:addr | l + 4 <= l0 + n} (
+  {l:addr | l + 1 <= l0 + n} (
     pfbuf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l)
       | params: &params, b: char, p0: ptr l0, p: ptr l
   ) : #[l:addr | l <= l0+n] ptr l =
@@ -278,7 +278,6 @@ fun putchars_stripped
         if not(skip_char(b)) && is_zero(skip_count) then
           if p + 4 <= p0 + CBUFSZ then
             let
-              // b is the char; skip at least 3-4 bytes?
               val p = putchar_stripped_buf (pfbuf | params, b, p0, p)
             in
               putchars_stripped (pfbuf | params, 0, cs, n1, i+1, p0, p)
@@ -499,6 +498,36 @@ fun should_help
       path = "--help" || path = "-h"
   end
 
+// when the current parameter is not a file path
+fun parse_non_file_parameters
+  {n:int | n >= 1}
+  {m:nat | m < n } (
+  params: &params, argc: int n, argv: &(@[string][n]), current: int m
+) : bool =
+  let
+    val () = assert(current < argc)
+    val param = string1_of_string (argv.[current])
+  in
+    case param of
+      | "--help" => ( help(); exit(0); )
+      | "-h" => ( help(); exit(0); )
+      | "-V" => ( version(); exit(0); )
+      | "--version" => ( version(); exit(0); )
+      | "-A" => ( show_nonprinting(params); show_ends(params); show_tabs(params); false; )
+      | "--show-all" => ( show_nonprinting(params); show_ends(params); show_tabs(params); false; )
+      | "-e" => ( show_nonprinting(params); show_ends(params); false; )
+      | "-E" => ( show_ends(params); false; )
+      | "--show-ends" => ( show_ends(params); false; )
+      | "-t" => ( show_tabs(params) ; show_nonprinting(params); false; )
+      | "-T" => ( show_tabs(params); false; )
+      | "--show-tabs" => ( show_tabs(params); false; )
+      | "-v" => ( show_nonprinting(params); false; )
+      | "--show-nonprinting" => ( show_nonprinting(params); false; )
+      | "-s" => ( strip_ansi(params); false; )
+      | "--strip-ansi" => ( strip_ansi(params); false; )
+      | _ => true
+end
+
 // suppose that current parameter is a file path to cat()
 fun parse_file_path
   {n:int | n >= 1}
@@ -520,53 +549,26 @@ fun parse_file_path
     if next = argc then
       ()
   else
-    parse_file_path(params, argc, argv, next)
+    parse_parameters(params, true, argc, argv, next)
 end
 
-// when the current parameter is not a file path
-fun parse_non_file_parameters
+and parse_parameters
   {n:int | n >= 1}
   {m:nat | m < n } (
-  params: &params, argc: int n, argv: &(@[string][n]), current: int m
-) : bool =
-  let
-    val () = assert(current < argc)
-    val param = string1_of_string (argv.[current])
-  in
-    case+ param of
-      | "--help" => ( help(); exit(0); )
-      | "-h" => ( help(); exit(0); )
-      | "-V" => ( version(); exit(0); )
-      | "--version" => ( version(); exit(0); )
-      | "-A" => ( show_nonprinting(params); show_ends(params); show_tabs(params); false; )
-      | "--show-all" => ( show_nonprinting(params); show_ends(params); show_tabs(params); false; )
-      | "-e" => ( show_nonprinting(params); show_ends(params); false; )
-      | "-E" => ( show_ends(params); false; )
-      | "--show-ends" => ( show_ends(params); false; )
-      | "-t" => ( show_tabs(params) ; show_nonprinting(params); false; )
-      | "-T" => ( show_tabs(params); false; )
-      | "--show-tabs" => ( show_tabs(params); false; )
-      | "-v" => ( show_nonprinting(params); false; )
-      | "--show-nonprinting" => ( show_nonprinting(params); false; )
-      | "-s" => ( strip_ansi(params); false; )
-      | "--strip-ansi" => ( strip_ansi(params); false; )
-      | _ => true
-end
-
-fun parse_parameters
-  {n:int | n >= 1}
-  {m:nat | m < n } (
-  params: &params, argc: int n, argv: &(@[string][n]), current: int m
+  params: &params, with_filepath: bool, argc: int n, argv: &(@[string][n]), current: int m
 ) : void =
   let
     val isfilepath = parse_non_file_parameters (params, argc, argv, current)
     val next = current + 1
   in
-    case+ isfilepath of
+    case isfilepath of
     | false => (
         if next = argc
-          then cat_stdin(params)
-          else parse_parameters(params, argc,argv,next)
+          then
+            if with_filepath
+              then ()
+              else cat_stdin(params)
+          else parse_parameters(params, with_filepath, argc,argv,next)
       )
     | true => parse_file_path(params, argc,argv,current)
 end
@@ -583,5 +585,5 @@ main(argc, argv) =
     if argc = 1 then
       cat_stdin(params)
     else
-      parse_parameters(params, argc, argv, 1)
+      parse_parameters(params, false, argc, argv, 1)
 end

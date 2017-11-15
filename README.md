@@ -8,7 +8,7 @@ example shipped with `ats-anairiats`.
 ## The Pitch
 
 Yes, it's really faster than `cat`. `ac` also has slightly nicer help, and it
-can optionally strip ANSI escape codes.
+can strip ANSI escape codes.
 
 ### Benchmarks
 

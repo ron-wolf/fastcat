@@ -14,6 +14,7 @@ install:
   - nix-env -i binutils
   - nix-env -i ats
   - nix-env -i stack
+  - nix-env -i pandoc
   - |
     if [ `uname` == "Linux" ]
     then

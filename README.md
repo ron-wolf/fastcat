@@ -43,3 +43,9 @@ At this point, you can build with:
 ```bash
  $ ./shake.hs
 ```
+
+### Documentation
+
+Manpages for `ac` are available in releases and they can be installed by the
+build system as well. `ac` also has
+[tldr](https://hackage.haskell.org/package/tldr) available.

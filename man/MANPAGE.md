@@ -17,21 +17,11 @@ When no file name is given, read from standard input.
 
 # OPTIONS
 
-**-h**, **--help** Output help information and exit
+**-h**, **-\-help** Output help information and exit
 
-**-v**, **--version** Output version information and exit
+**-v**, **-\-version** Output version information and exit
 
-**-s**, **--strip-ansi** Strip ANSI color codes
-
-**-A**, **--show-all** Equivalent to **-veT**
-
-**-e** Display $ at the end of each line and display tab characters as ^I
-
-**-t** Equivalent to **-vT**
-
-**-T**, **--show-tabs** Display tab characters as ^I
-
-**-v**, **show-nonprinting** Use ^ and M- notation
+**-s**, **-\-strip-ansi** Strip ANSI color codes
 
 # EXAMPLES
 

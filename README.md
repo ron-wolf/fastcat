@@ -46,6 +46,6 @@ At this point, you can build with:
 
 ### Documentation
 
-Manpages for `ac` are available in releases and they can be installed by the
-build system as well. `ac` also has
+Manpages for `ac` are available with each release. You can also install them
+with the build system. `ac` also has
 [tldr](https://hackage.haskell.org/package/tldr) available.

@@ -289,7 +289,9 @@ fun putchars_quoted
   {n:int}
   {n1,i:nat | i <= n1; n1 <= n}
   {l0:addr} {l:addr | l <= l0+CBUFSZ}
-  (pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0) | params: &params, cs: &bytes(n), n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l) : void =
+  (pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0) | params: &params, cs: &bytes(n)
+  , n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l
+  ) : void =
     if i < n1 then
       let
         val b = (char_of_byte)cs.[i]

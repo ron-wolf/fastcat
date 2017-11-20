@@ -26,13 +26,13 @@ fun{env:viewt@ype}
 fun{env1,env2:viewt@ype} catloop
   {n:nat}
   (env1: &env1, env2: &env2, buf: &bytes(n), n: size_t n) : void = 
-  let
-    val n1 = getchars<env1> (env1, buf, n)
-  in
-    if n1 > 0 then
-      (putchars<env2> (env2, buf, n1); catloop (env1, env2, buf, n))
-    else ()
-  end
+    let
+      val n1 = getchars<env1> (env1, buf, n)
+    in
+      if n1 > 0 then
+        (putchars<env2> (env2, buf, n1); catloop (env1, env2, buf, n))
+      else ()
+    end
 
 %{^
 typedef struct {
@@ -42,7 +42,6 @@ typedef struct {
   int strip_ansi ;
 } params_t ;
 %}
-
 typedef params =
   // a data type for our command-line options
   $extype_struct
@@ -56,21 +55,19 @@ typedef params =
 extern
 fun params_copy (to: &params, from: &params) : void = "mycat_params_copy"
 
-implement
-params_copy
-  (to, from) = {
+implement params_copy (to, from) = 
+  {
     val () = to.show_ends := from.show_ends
     val () = to.show_tabs := from.show_tabs
     val () = to.show_nonprinting := from.show_nonprinting
     val () = to.strip_ansi := from.strip_ansi
-}
+  }
 
-fn quote_output
-  (params: &params): bool =
-    params.show_ends
-      || params.show_tabs
-      || params.show_nonprinting
-      || params.strip_ansi
+fn quote_output(params: &params): bool =
+  params.show_ends
+    || params.show_tabs
+    || params.show_nonprinting
+    || params.strip_ansi
 
 %{^
 typedef
@@ -401,8 +398,8 @@ fun readout_quoted
       val () = catloop<envinp(fd),envstdoutq> (env1, env2, !p_buf, BUFSZ)
       prval () = pf := env1.fildes_v
       val () = envstdoutq_uninitialize (env2)
-    in // nothing
-end
+    in
+    end
 
 fun cat_stdin
   (params: &params): void = 
@@ -415,7 +412,7 @@ fun cat_stdin
         readout_quoted (pf_stdin | params, STDIN_FILENO)
       else
         readout_raw (pf_stdin | STDIN_FILENO)
-    val () = $UNISTD.stdin_fildes_view_set (pf_stdin | (*none*))
+    val () = $UNISTD.stdin_fildes_view_set (pf_stdin|)
   }
 
 // open, dump and close file
@@ -430,7 +427,7 @@ fun cat_file (params: &params, path: string) : void =
         readout_raw (pf_fd | fd)
   in
     $FCNTL.close_exn (pf_fd | fd)
-end
+  end
 
 fn show_ends(params: &params) : void =
   params.show_ends := true
@@ -444,8 +441,7 @@ fn strip_ansi (params: &params) : void =
 #define PROGRAM_VERSION "ats-cat version 0.1.3\nCopyright (c) 2017 Vanessa McHale\n"
 fn version() = prerr(PROGRAM_VERSION)
 
-fn help () = (
-  prerr "Usage: ac [OPTION] ... [FILE] ...
+fn help () = prerr "Usage: ac [OPTION] ... [FILE] ...
 
 Concatenate FILE(s), or standard input, to standard output.
     -A, --show-all           equivalent to -vET
@@ -464,7 +460,6 @@ Examples:
   ac              Copy standard input to standard output.
   
 Bug reports and updates at github.com/vmchale/fastcat\n"
-)
 
 fun should_help
   {n: int | n >= 1}
@@ -517,13 +512,11 @@ fun parse_file_path
   let
     val () = assert(current < argc)
     val path = string1_of_string (argv.[current])
-    val () = assert_errmsg_bool1 (
-      gte_size1_int1(string1_length(path),1),"path must contain at least one character"
-    )
+    val () = assert_errmsg_bool1 ( gte_size1_int1(string1_length(path),1),"path must contain at least one character" )
     val () =
       if not(should_help(argc, argv, 0)) then 
         cat_file(params, path) 
-      else ( help() ; exit(0) ;)
+      else ( help() ; exit(0))
     val next = current+1
   in
     if next = argc then

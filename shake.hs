@@ -9,7 +9,11 @@ import           Test.HUnit
 
 main :: IO ()
 main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
-    want [ "target/ac" ]
+    want [ "target/ac", "man/ac.1" ]
+
+    "man/ac.1" %> \_ -> do
+        need ["man/MANPAGE.md"]
+        cmd ["pandoc", "man/MANPAGE.md", "-s", "-t", "man", "-o", "man/ac.1"]
 
     "target/hcat" %> \_ -> do
         need ["hs/cat.hs"]
@@ -41,10 +45,12 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
         command [] "rm" ["-f", "ac_dats.c"]
 
     "install" ~> do
-        need ["target/ac"]
+        need ["target/ac", "man/ac.1"]
         home <- getEnv "HOME"
         case home of
-            Just h -> cmd ["cp", "target/ac", h ++ "/.local/bin"]
+            Just h -> do
+                cmd_ ["cp", "man/ac.1", h ++ "/.local/share/man/man1"]
+                cmd ["cp", "target/ac", h ++ "/.local/bin"]
             _ -> putNormal "Warning: could not detect home directory; skipping install."
 
     "bench" ~> do

@@ -296,6 +296,7 @@ fun putchars_stripped
         else if not(skip_char(b)) then
           putchars_stripped (pfbuf | params, skip_count, cs, n1, i+1, p0, p)
         else
+          // FIXME instead of passing skip_count, could we skip >1 char?
           putchars_stripped (pfbuf | params, 2, cs, n1, i+1, p0, p)
         end
     else
@@ -388,8 +389,7 @@ local
 in
 
   extern
-  fun envstdoutq_get_cbuf (env: &envstdoutq)
-    : [l0:addr] (viewout (cbuf_v (l0, CBUFSZ, l0)) | ptr l0)
+  fun envstdoutq_get_cbuf (env: &envstdoutq) : [l0:addr] (viewout (cbuf_v (l0, CBUFSZ, l0)) | ptr l0)
       = "mac#envstdoutq_get_cbuf"
 
   implement

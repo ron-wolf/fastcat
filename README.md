@@ -43,9 +43,3 @@ At this point, you can build with:
 ```bash
  $ ./shake.hs
 ```
-
-To install:
-
-```bash
- $ ./shake.hs install
-```

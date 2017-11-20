@@ -533,9 +533,8 @@ end
 // suppose that current parameter is a file path to cat()
 fun parse_file_path
   {n:int | n >= 1}
-  {m:nat | m < n } (
-  params: &params, argc: int n, argv: &(@[string][n]), current: int m
-) : void =
+  {m:nat | m < n }
+  (params: &params, argc: int n, argv: &(@[string][n]), current: int m) : void =
   let
     val () = assert(current < argc)
     val path = string1_of_string (argv.[current])
@@ -553,6 +552,7 @@ fun parse_file_path
   else
     parse_file_path(params, argc, argv, next)
 end
+
 and parse_parameters
   {n:int | n >= 1}
   {m:nat | m < n } 

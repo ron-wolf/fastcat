@@ -1,3 +1,6 @@
+stats:
+    @ghstats vmchale fastcat | tail -n4 ; printf ''
+
 check:
     git diff master origin/master
 

@@ -76,6 +76,6 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
         void $ liftIO $ runTestTT test1
 
     "clean" ~> do
-        removeFilesAfter "." ["//*.c", "//*.hi", "//*.o", "tags", "build", "//*.tar.gz"]
+        removeFilesAfter "." ["//*.c", "//*.hi", "//*.o", "tags", "build", "man/ac.1", "//*.tar.gz"]
         removeFilesAfter ".shake" ["//*"]
         removeFilesAfter "target" ["//*"]

@@ -25,16 +25,16 @@ When no file name is given, read from standard input.
 
 # EXAMPLES
 
-ac f g
-
-```
 Output f's contents, then g's contents
-```
-
-curl -s wttr.in/LA | ac -s
 
 ```
+ac f g
+```
+
 Strip colors from output of command.
+
+```
+curl -s wttr.in/LA | ac -s
 ```
 
 # BUG REPORTS

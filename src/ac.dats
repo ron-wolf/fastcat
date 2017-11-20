@@ -45,6 +45,7 @@ typedef struct {
   int strip_ansi ;
 } params_t ;
 %}
+
 typedef params =
   // a data type for our command-line options
   $extype_struct
@@ -130,6 +131,7 @@ fun readout_raw {fd:int} (
   let
     var env1: envinp(fd)
     val () = env1.fildes := fd
+    // consume proof
     prval () = env1.fildes_v := pf
     var env2: envstdout ()
     val () = env2.dummy := 0
@@ -226,7 +228,7 @@ end
 %}
 #define CBUFSZ 4096
 
-// helper
+// helper for skipping ANSI escape codes
 fun is_zero(n: int) : bool =
   case n of
     | 0 => true
@@ -551,12 +553,10 @@ fun parse_file_path
   else
     parse_file_path(params, argc, argv, next)
 end
-
 and parse_parameters
   {n:int | n >= 1}
-  {m:nat | m < n } (
-  params: &params, with_filepath: bool, argc: int n, argv: &(@[string][n]), current: int m
-) : void =
+  {m:nat | m < n } 
+  (params: &params, with_filepath: bool, argc: int n, argv: &(@[string][n]), current: int m) : void =
   let
     val isfilepath = parse_non_file_parameters (params, argc, argv, current)
     val next = current + 1

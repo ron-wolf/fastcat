@@ -27,17 +27,17 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
         need ["target/ats-cat.tar.gz"]
         cmd ["cp", "target/ats-cat.tar.gz", "/home/vanessa/programming/rust/nessa-site/static"]
 
-    "shake" %> \_ -> do
+    "build" %> \_ -> do
         need ["shake.hs"]
         cmd_ ["mkdir", "-p", ".shake"]
         command_ [Cwd ".shake"] "cp" ["../shake.hs", "."]
-        command [Cwd ".shake"] "ghc" ["-O", "shake.hs", "-o", "../shake", "-Wall", "-Werror", "-Wincomplete-uni-patterns", "-Wincomplete-record-updates"]
+        command [Cwd ".shake"] "ghc" ["-O", "shake.hs", "-o", "../build", "-Wall", "-Werror", "-Wincomplete-uni-patterns", "-Wincomplete-record-updates"]
 
     "target/ac" %> \_ -> do
         ats <- getDirectoryFiles "" ["src//*.*ats"]
         need ats
         cmd_ ["mkdir", "-p", "target"]
-        command_ [EchoStderr False] "atscc" (ats ++ ["-o", "target/ac", "-O3", "-mtune=native"]) -- -DATS_MEMALLOC_LIBC
+        command_ [EchoStderr False] "atscc" (ats ++ ["-o", "target/ac", "-O3", "-mtune=native"])
         command [] "rm" ["-f", "ac_dats.c"]
 
     "install" ~> do
@@ -72,6 +72,6 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
         void $ liftIO $ runTestTT test1
 
     "clean" ~> do
-        removeFilesAfter "." ["//*.c", "//*.hi", "//*.o", "tags", "shake", "//*.tar.gz"]
+        removeFilesAfter "." ["//*.c", "//*.hi", "//*.o", "tags", "build", "//*.tar.gz"]
         removeFilesAfter ".shake" ["//*"]
         removeFilesAfter "target" ["//*"]

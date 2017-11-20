@@ -11,10 +11,9 @@ macdef STDIN_FILENO = $UNISTD.STDIN_FILENO
 macdef STDOUT_FILENO = $UNISTD.STDOUT_FILENO
 
 extern
-fun{env:viewt@ype}
-  getchars {n:nat} (
-    env: &env, buf: &bytes(n), n: size_t (n)
-  ) : sizeLte (n)
+fun{env:viewt@ype} getchars
+  {n:nat}
+  (env: &env, buf: &bytes(n), n: size_t (n)) : sizeLte (n)
 
 extern
 fun{env:viewt@ype}
@@ -24,18 +23,16 @@ fun{env:viewt@ype}
 // catloop takes a buffer, its size, and two proofs as arguments. The proofs
 // guarantee that values of type 'env1' and 'env2' exist at the appropriate
 // locations and that we can peek at the value safely.
-fun{env1,env2:viewt@ype}
-  catloop {n:nat} (
-      env1: &env1, env2: &env2
-    , buf: &bytes(n), n: size_t n
-  ) : void = 
+fun{env1,env2:viewt@ype} catloop
+  {n:nat}
+  (env1: &env1, env2: &env2, buf: &bytes(n), n: size_t n) : void = 
   let
     val n1 = getchars<env1> (env1, buf, n)
   in
     if n1 > 0 then
       (putchars<env2> (env2, buf, n1); catloop (env1, env2, buf, n))
     else ()
-end
+  end
 
 %{^
 typedef struct {
@@ -49,17 +46,15 @@ typedef struct {
 typedef params =
   // a data type for our command-line options
   $extype_struct
-    "params_t" of {
-      show_ends = bool,      // display $ at end of each line
-      show_tabs=bool,        // display TAB characters as ^I
-      show_nonprinting=bool, // use ^ and M- notation, except for LFD and TAB
-      strip_ansi=bool        // strip ansi escape codes
-    }
+    "params_t" of 
+      { show_ends = bool      // display $ at end of each line
+      , show_tabs=bool        // display TAB characters as ^I
+      , show_nonprinting=bool // use ^ and M- notation, except for LFD and TAB
+      , strip_ansi=bool       // strip ansi escape codes
+      }
 
 extern
-fun params_copy (
-    to: &params, from: &params
-  ) : void = "mycat_params_copy"
+fun params_copy (to: &params, from: &params) : void = "mycat_params_copy"
 
 implement
 params_copy
@@ -85,10 +80,10 @@ struct {
 %}
 viewtypedef
 envinp (fd:int) =
-  $extype_struct "envinp_t" of {
-    fildes= int (fd)        // file descriptor
-  , fildes_v= fildes_v (fd) // file descriptor view
-  }
+  $extype_struct "envinp_t" of
+    { fildes= int (fd)        // file descriptor
+    , fildes_v= fildes_v (fd) // file descriptor view
+    }
 
 %{^
 typedef
@@ -98,15 +93,14 @@ struct {
 %}
 viewtypedef
 envstdout () =
-$extype_struct "envstdout_t" of {
-  dummy= int
-}
+  $extype_struct "envstdout_t" of
+    { dummy= int
+    }
 
 local
   sta fd: int
 in
-  implement
-  getchars<envinp(fd)> (env, buf, n) =
+  implement getchars<envinp(fd)> (env, buf, n) =
     let
       // the number of characters read
       val n1 = $FCNTL.read_exn (env.fildes_v | env.fildes, buf, n)
@@ -122,26 +116,25 @@ implement
       val n1 = $FCNTL.write_all_err (pf_stdout | STDOUT_FILENO, buf, n1)
       val () = $UNISTD.stdout_fildes_view_set (pf_stdout | (*nothing*))
     in // nothing
-end
+    end
 
 // just dump the output (buffered of course)
-fun readout_raw {fd:int} (
-  pf: !fildes_v fd | fd: int fd
-) : void =
-  let
-    var env1: envinp(fd)
-    val () = env1.fildes := fd
-    // consume proof
-    prval () = env1.fildes_v := pf
-    var env2: envstdout ()
-    val () = env2.dummy := 0
-    #define BUFSZ 4096
-    var !p_buf with pf_buf = @[byte][BUFSZ]()
-    prval () = pf_buf := bytes_v_of_b0ytes_v (pf_buf)
-    val () = catloop<envinp(fd),envstdout()> (env1, env2, !p_buf, BUFSZ)
-    prval () = pf := env1.fildes_v
-  in // nothing
-end
+fun readout_raw {fd:int} 
+  (pf: !fildes_v fd | fd: int fd) : void =
+    let
+      var env1: envinp(fd)
+      val () = env1.fildes := fd
+      // consume file descriptor
+      prval () = env1.fildes_v := pf
+      var env2: envstdout ()
+      val () = env2.dummy := 0
+      #define BUFSZ 4096
+      var !p_buf with pf_buf = @[byte][BUFSZ]()
+      prval () = pf_buf := bytes_v_of_b0ytes_v (pf_buf)
+      val () = catloop<envinp(fd),envstdout()> (env1, env2, !p_buf, BUFSZ)
+      prval () = pf := env1.fildes_v
+    in // nothing
+    end
 
 absview cbuf_v (l0:addr, n: int, l:addr)
 
@@ -168,10 +161,8 @@ extern
 fun cbuf_putchar
   {n:nat}
   {l0:addr}
-  {l:addr | l < l0 + n} (
-    pf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l+1)
-      | p: ptr l, c: char
-  ) : void =
+  {l:addr | l < l0 + n}
+  (pf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l+1) | p: ptr l, c: char) : void =
     "mac#cbuf_putchar"
 
 extern
@@ -187,10 +178,8 @@ extern
 fun putchar_stripped_buf
   {n:nat}
   {l0:addr}
-  {l:addr | l + 1 <= l0 + n} (
-    pfbuf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l)
-      | params: &params, b: char, p0: ptr l0, p: ptr l
-  ) : #[l:addr | l <= l0+n] ptr l =
+  {l:addr | l + 1 <= l0 + n}
+  (pfbuf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l) | params: &params, b: char, p0: ptr l0, p: ptr l) : #[l:addr | l <= l0+n] ptr l =
     let
       macdef putc (p, c) = cbuf_putchar (pfbuf | ,(p), ,(c))
     in
@@ -200,16 +189,14 @@ end
 fun putchar_quoted_buf
   {n:nat}
   {l0:addr}
-  {l:addr | l + 4 <= l0 + n} (
-    pfbuf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l)
-      | params: &params, b: char, p0: ptr l0, p: ptr l
-  ) : #[l:addr | l <= l0+n] ptr l =
+  {l:addr | l + 4 <= l0 + n}
+  (pfbuf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l) | params: &params, b: char, p0: ptr l0, p: ptr l) : #[l:addr | l <= l0+n] ptr l =
     let
       #define i2c char_of_int
       val ch = int_of_uchar ((uchar_of_char)b)
       macdef putc (p, c) = cbuf_putchar (pfbuf | ,(p), ,(c))
     in
-      case+ 0 of
+      case+ 0 of // FIXME plain pattern matching is faster?
         | _ when ch < 32 => begin
           case+ b of
             | '\t' when ~params.show_tabs => (putc(p, '\t'); p+1)
@@ -224,15 +211,9 @@ fun putchar_quoted_buf
 end
 
 %{^
-#define CBUFSZ 4096
+#define CBUFSZ 8192
 %}
-#define CBUFSZ 4096
-
-// helper for skipping ANSI escape codes
-fun is_zero(n: int) : bool =
-  case n of
-    | 0 => true
-    | _ => false
+#define CBUFSZ 8192
 
 // helper for parser
 fun is_digit(c: char) : bool =
@@ -268,16 +249,15 @@ fun skip_char(b: char) : bool =
 fun putchars_stripped
   {n:int}
   {n1,i:nat | i <= n1; n1 <= n}
-  {l0:addr} {l:addr | l <= l0+CBUFSZ} (
-    pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0)
-      | params: &params, skip_count: int
-      , cs: &bytes(n), n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l
+  {l0:addr} {l:addr | l <= l0+CBUFSZ}
+  (pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0) | params: &params, skip_count: int
+  , cs: &bytes(n), n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l
   ) : void =
     if i < n1 then
       let
         val b = (char_of_byte)cs.[i]
       in
-        if not(skip_char(b)) && is_zero(skip_count) then
+        if not(skip_char(b)) && skip_count = 0 then
           if p + 4 <= p0 + CBUFSZ then
             let
               val p = putchar_stripped_buf (pfbuf | params, b, p0, p)
@@ -308,11 +288,8 @@ fun putchars_stripped
 fun putchars_quoted
   {n:int}
   {n1,i:nat | i <= n1; n1 <= n}
-  {l0:addr} {l:addr | l <= l0+CBUFSZ} (
-    pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0)
-      | params: &params
-      , cs: &bytes(n), n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l
-  ) : void =
+  {l0:addr} {l:addr | l <= l0+CBUFSZ}
+  (pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0) | params: &params, cs: &bytes(n), n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l) : void =
     if i < n1 then
       let
         val b = (char_of_byte)cs.[i]

@@ -31,7 +31,7 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
         need ["shake.hs"]
         cmd_ ["mkdir", "-p", ".shake"]
         command_ [Cwd ".shake"] "cp" ["../shake.hs", "."]
-        command [Cwd ".shake"] "ghc" ["-O", "shake.hs", "-o", "../build", "-Wall", "-Werror", "-Wincomplete-uni-patterns", "-Wincomplete-record-updates"]
+        command [Cwd ".shake"] "ghc" ["-O2", "shake.hs", "-o", "../build", "-Wall", "-Werror", "-Wincomplete-uni-patterns", "-Wincomplete-record-updates"]
 
     "target/ac" %> \_ -> do
         ats <- getDirectoryFiles "" ["src//*.*ats"]
@@ -54,8 +54,6 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
             , "cat shake.hs"
             , "./target/ac shake.hs"
             , "./target/hcat shake.hs"
-            , "ac --show-nonprinting colors"
-            , "cat --show-nonprinting colors"
             , "ac colors | perl -pe 's/\\e\\[?.*?[\\@-~]//g'"
             , "ac colors | strip-ansi"
             , "ac colors | sed -r \"s/\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g\""

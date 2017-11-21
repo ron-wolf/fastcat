@@ -7,7 +7,7 @@ example shipped with `ats-anairiats`.
 
 ## The Pitch
 
-Yes, it's really faster than `cat`. `ac` also has slightly nicer help, and it
+Yes, it's really faster than `cat`. `ac` also
 can strip ANSI escape codes.
 
 ### Benchmarks
@@ -23,7 +23,7 @@ to strip ANSI escape codes from program output.
 
 ## The Anti-Pitch
 
-Some missing features and less support. Binaries are currently only
+Missing features and less support. Binaries are currently only
 available for x86\_64 Linux.
 
 ## Building

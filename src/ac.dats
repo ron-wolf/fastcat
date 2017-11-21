@@ -36,9 +36,6 @@ fun{env1,env2:viewt@ype} catloop
 
 %{^
 typedef struct {
-  int show_ends ;
-  int show_tabs ;
-  int show_nonprinting ;
   int strip_ansi ;
 } params_t ;
 %}
@@ -46,10 +43,7 @@ typedef params =
   // a data type for our command-line options
   $extype_struct
     "params_t" of 
-      { show_ends = bool      // display $ at end of each line
-      , show_tabs=bool        // display TAB characters as ^I
-      , show_nonprinting=bool // use ^ and M- notation, except for LFD and TAB
-      , strip_ansi=bool       // strip ansi escape codes
+      { strip_ansi = bool // strip ansi escape codes
       }
 
 extern
@@ -57,17 +51,11 @@ fun params_copy (to: &params, from: &params) : void = "mycat_params_copy"
 
 implement params_copy (to, from) = 
   {
-    val () = to.show_ends := from.show_ends
-    val () = to.show_tabs := from.show_tabs
-    val () = to.show_nonprinting := from.show_nonprinting
     val () = to.strip_ansi := from.strip_ansi
   }
 
 fn quote_output(params: &params): bool =
-  params.show_ends
-    || params.show_tabs
-    || params.show_nonprinting
-    || params.strip_ansi
+  params.strip_ansi
 
 %{^
 typedef
@@ -181,31 +169,7 @@ fun putchar_stripped_buf
       macdef putc (p, c) = cbuf_putchar (pfbuf | ,(p), ,(c))
     in
       ( putc (p, b); p+1 )
-end
-
-fun putchar_quoted_buf
-  {n:nat}
-  {l0:addr}
-  {l:addr | l + 4 <= l0 + n}
-  (pfbuf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l) | params: &params, b: char, p0: ptr l0, p: ptr l) : #[l:addr | l <= l0+n] ptr l =
-    let
-      #define i2c char_of_int
-      val ch = int_of_uchar ((uchar_of_char)b)
-      macdef putc (p, c) = cbuf_putchar (pfbuf | ,(p), ,(c))
-    in
-      case+ 0 of // FIXME plain pattern matching is faster?
-        | _ when ch < 32 => begin
-          case+ b of
-            | '\t' when ~params.show_tabs => (putc(p, '\t'); p+1)
-            | '\n' => (putc(p, '$') ; putc(p+1, '\n'); p+2)
-            | _ => (putc(p, '^'); putc(p+1, i2c(ch+64)); p+2)
-          end
-        | _ when ch < 127 => ( putc (p, b); p+1 )
-        | _ when ch = 127 => ( putc (p, '^'); putc (p+1, '?'); p+2 )
-        | _ when ch < 128 + 32  => (putc(p, 'M'); putc(p+1, '-'); putc(p+2, '^'); putc(p+3, i2c(ch-128+64)); p+4)
-        | _ when ch < 128 + 127 => (putc(p, 'M'); putc(p+1, '-'); putc(p+2, i2c(ch-128)); p+3)
-        | _ => ( putc(p, 'M'); putc(p+1, '-'); putc(p+2, '^'); putc(p+3, '?'); p+4)
-end
+    end
 
 %{^
 #define CBUFSZ 8192
@@ -282,37 +246,6 @@ fun putchars_stripped
       in // nothing
     end
 
-fun putchars_quoted
-  {n:int}
-  {n1,i:nat | i <= n1; n1 <= n}
-  {l0:addr} {l:addr | l <= l0+CBUFSZ}
-  (pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0) | params: &params, cs: &bytes(n)
-  , n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l
-  ) : void =
-    if i < n1 then
-      let
-        val b = (char_of_byte)cs.[i]
-      in
-        if p + 4 <= p0 + CBUFSZ then
-          let
-            val p = putchar_quoted_buf (pfbuf | params, b, p0, p)
-          in
-            putchars_quoted (pfbuf | params, cs, n1, i+1, p0, p)
-        end
-        else
-          let
-            val () = cbuf_clearall (pfbuf | p0, p)
-            val p = putchar_quoted_buf (pfbuf | params, b, p0, p0)
-          in
-            putchars_quoted (pfbuf | params, cs, n1, i+1, p0, p)
-          end
-    end 
-    else
-      let
-        val () = cbuf_clearall (pfbuf | p0, p)
-      in // nothing
-    end
-
 %{^
   typedef struct {
     params_t params ;
@@ -374,10 +307,7 @@ in
       val (pfout | p0) = envstdoutq_get_cbuf (env)
       prval (pf, fpf) = $UNSAFE.viewout_decode (pfout)
       val () =
-        if env.params.strip_ansi then
-          putchars_stripped (pf | env.params, 0, cs, n1, 0, p0, p0)
-        else
-        putchars_quoted (pf | env.params, cs, n1, 0, p0, p0)
+        putchars_stripped (pf | env.params, 0, cs, n1, 0, p0, p0)
       prval () = fpf (pf)
     in // nothing
   end
@@ -429,27 +359,16 @@ fun cat_file (params: &params, path: string) : void =
     $FCNTL.close_exn (pf_fd | fd)
   end
 
-fn show_ends(params: &params) : void =
-  params.show_ends := true
-fn show_tabs(params: &params) : void =
-  params.show_tabs := true
-fn show_nonprinting (params: &params) : void =
-  params.show_nonprinting := true
 fn strip_ansi (params: &params) : void =
   params.strip_ansi := true
 
 #define PROGRAM_VERSION "ats-cat version 0.1.4\nCopyright (c) 2017 Vanessa McHale\n"
 fn version() = prerr(PROGRAM_VERSION)
 
+// TODO strip out all the other junk; we mostly don't care.
 fn help () = prerr "Usage: ac [OPTION] ... [FILE] ...
 
 Concatenate FILE(s), or standard input, to standard output.
-    -A, --show-all           equivalent to -vET
-    -e                       display $ at the end of each line and display TAB characters as ^I
-    -E, --show-ends          display $ at end of each line
-    -t                       equivalent to -vT
-    -T, --show-tabs          display TAB characters as ^I
-    -v, --show-nonprinting   use ^ and M- notation, except for LFD and TAB
     -s, --strip-ansi         strip ANSI codes
     -V, --version            show version information
     -h, --help               display this help and exit
@@ -489,16 +408,6 @@ fun parse_non_file_parameters
       | "-h" => ( help(); exit(0); )
       | "-V" => ( version(); exit(0); )
       | "--version" => ( version(); exit(0); )
-      | "-A" => ( show_nonprinting(params); show_ends(params); show_tabs(params); false; )
-      | "--show-all" => ( show_nonprinting(params); show_ends(params); show_tabs(params); false; )
-      | "-e" => ( show_nonprinting(params); show_ends(params); false; )
-      | "-E" => ( show_ends(params); false; )
-      | "--show-ends" => ( show_ends(params); false; )
-      | "-t" => ( show_tabs(params) ; show_nonprinting(params); false; )
-      | "-T" => ( show_tabs(params); false; )
-      | "--show-tabs" => ( show_tabs(params); false; )
-      | "-v" => ( show_nonprinting(params); false; )
-      | "--show-nonprinting" => ( show_nonprinting(params); false; )
       | "-s" => ( strip_ansi(params); false; )
       | "--strip-ansi" => ( strip_ansi(params); false; )
       | _ => true
@@ -549,9 +458,6 @@ implement
 main(argc, argv) =
   let
     var params : params
-    val () = params.show_ends := false
-    val () = params.show_tabs := false
-    val () = params.show_nonprinting := false
     val () = params.strip_ansi := false
   in
     if argc = 1 then

@@ -30,7 +30,8 @@ fun{env1,env2:viewt@ype} catloop
       val n1 = getchars<env1> (env1, buf, n)
     in
       if n1 > 0 then
-        (putchars<env2> (env2, buf, n1); catloop (env1, env2, buf, n))
+        ( putchars<env2> (env2, buf, n1); 
+          catloop (env1, env2, buf, n) )
       else ()
     end
 
@@ -99,9 +100,8 @@ implement
     let
       val (pf_stdout | ()) = $UNISTD.stdout_fildes_view_get ()
       val n1 = $FCNTL.write_all_err (pf_stdout | STDOUT_FILENO, buf, n1)
-      val () = $UNISTD.stdout_fildes_view_set (pf_stdout | (*nothing*))
-    in // nothing
-    end
+      val () = $UNISTD.stdout_fildes_view_set (pf_stdout|)
+    in end
 
 // just dump the output (buffered of course)
 fun readout_raw {fd:int} 
@@ -118,8 +118,7 @@ fun readout_raw {fd:int}
       prval () = pf_buf := bytes_v_of_b0ytes_v (pf_buf)
       val () = catloop<envinp(fd),envstdout()> (env1, env2, !p_buf, BUFSZ)
       prval () = pf := env1.fildes_v
-    in // nothing
-    end
+    in end
 
 absview cbuf_v (l0:addr, n: int, l:addr)
 
@@ -154,17 +153,16 @@ extern
   fun cbuf_clearall
     {n:nat}
     {l0:addr}
-    {l:addr | l <= l0 + n} (
-      pf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l0)
-        | p0: ptr l0, p: ptr l
-    ) : void =
+    {l:addr | l <= l0 + n}
+    (pf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l0) | p0: ptr l0, p: ptr l) : void =
       "mac#cbuf_clearall"
 
 fun putchar_stripped_buf
   {n:nat}
   {l0:addr}
   {l:addr | l + 1 <= l0 + n}
-  (pfbuf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l) | params: &params, b: char, p0: ptr l0, p: ptr l) : #[l:addr | l <= l0+n] ptr l =
+  ( pfbuf: !cbuf_v (l0, n, l) >> cbuf_v (l0, n, l) | params: &params
+  , b: char, p0: ptr l0, p: ptr l ) : #[l:addr | l <= l0+n] ptr l =
     let
       macdef putc (p, c) = cbuf_putchar (pfbuf | ,(p), ,(c))
     in
@@ -211,9 +209,8 @@ fun putchars_stripped
   {n:int}
   {n1,i:nat | i <= n1; n1 <= n}
   {l0:addr} {l:addr | l <= l0+CBUFSZ}
-  (pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0) | params: &params, skip_count: int
-  , cs: &bytes(n), n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l
-  ) : void =
+  ( pfbuf: !cbuf_v (l0, CBUFSZ, l) >> cbuf_v (l0, CBUFSZ, l0) | params: &params, skip_count: int
+  , cs: &bytes(n), n1: size_t n1, i: size_t i, p0: ptr l0, p: ptr l ) : void =
     if i < n1 then
       let
         val b = (char_of_byte)cs.[i]
@@ -243,8 +240,7 @@ fun putchars_stripped
     else
       let
         val () = cbuf_clearall (pfbuf | p0, p)
-      in // nothing
-    end
+      in end
 
 %{^
   typedef struct {
@@ -280,10 +276,7 @@ fun putchars_stripped
 viewtypedef
 envstdoutq =
 $extype_struct "envstdoutq_t"
-  of {
-      params= params
-    , _rest= undefined_vt
-  }
+  of { params = params }
 
 extern
 fun envstdoutq_initialize (env: &envstdoutq? >> envstdoutq, from: &params ) : void =
@@ -309,12 +302,11 @@ in
       val () =
         putchars_stripped (pf | env.params, 0, cs, n1, 0, p0, p0)
       prval () = fpf (pf)
-    in // nothing
-  end
+    in end
 
 end
 
-fun readout_quoted
+fun readout_stripped
   {fd:int} (pf: !fildes_v fd | params: &params, fd: int fd) : void =
     let
       var env1: envinp(fd)
@@ -339,7 +331,7 @@ fun cat_stdin
     val isq = quote_output (params)
     val () =
       if isq then
-        readout_quoted (pf_stdin | params, STDIN_FILENO)
+        readout_stripped (pf_stdin | params, STDIN_FILENO)
       else
         readout_raw (pf_stdin | STDIN_FILENO)
     val () = $UNISTD.stdin_fildes_view_set (pf_stdin|)
@@ -352,7 +344,7 @@ fun cat_file (params: &params, path: string) : void =
     val isq = quote_output (params)
     val () =
       if isq then
-        readout_quoted (pf_fd | params, fd)
+        readout_stripped (pf_fd | params, fd)
       else
         readout_raw (pf_fd | fd)
   in
@@ -383,7 +375,9 @@ Bug reports and updates at github.com/vmchale/fastcat\n"
 fun should_help
   {n: int | n >= 1}
   {m: nat | m < n}
-  (argc: int n, argv: &(@[string][n]), current: int m) : bool =
+  ( argc: int n
+  , argv: &(@[string][n])
+  , current: int m ) : bool =
   let
     val path = string1_of_string (argv.[current])
   in
@@ -396,12 +390,13 @@ fun should_help
 // when the current parameter is not a file path
 fun parse_non_file_parameters
   {n:int | n >= 1}
-  {m:nat | m < n } (
-  params: &params, argc: int n, argv: &(@[string][n]), current: int m
-) : bool =
+  {m:nat | m < n } 
+  ( params: &params
+  , argc: int n, argv: &(@[string][n])
+  , current: int m ) : bool =
   let
-    val () = assert(current < argc)
-    val param = string1_of_string (argv.[current])
+    val () = assertloc(current < argc)
+    val param = string1_of_string(argv.[current])
   in
     case param of
       | "--help" => ( help(); exit(0); )
@@ -419,13 +414,13 @@ fun parse_file_path
   {m:nat | m < n }
   (params: &params, argc: int n, argv: &(@[string][n]), current: int m) : void =
   let
-    val () = assert(current < argc)
+    val () = assertloc(current < argc)
     val path = string1_of_string (argv.[current])
-    val () = assert_errmsg_bool1 ( gte_size1_int1(string1_length(path),1),"path must contain at least one character" )
+    val () = assert_errmsg_bool1 ( gte_size1_int1(string1_length(path), 1), "path must contain at least one character" )
     val () =
       if not(should_help(argc, argv, 0)) then 
         cat_file(params, path) 
-      else ( help() ; exit(0))
+      else ( help() ; exit(0) )
     val next = current+1
   in
     if next = argc then
@@ -437,7 +432,9 @@ end
 and parse_parameters
   {n:int | n >= 1}
   {m:nat | m < n } 
-  (params: &params, with_filepath: bool, argc: int n, argv: &(@[string][n]), current: int m) : void =
+  ( params: &params, with_filepath: bool
+  , argc: int n, argv: &(@[string][n])
+  , current: int m) : void =
   let
     val isfilepath = parse_non_file_parameters (params, argc, argv, current)
     val next = current + 1
@@ -447,7 +444,7 @@ and parse_parameters
         if next = argc
           then
             if with_filepath
-              then ()
+              then ( print("Warning, not a filepath: ") ; print(current) ; print("\n") )
               else cat_stdin(params)
           else parse_parameters(params, with_filepath, argc,argv,next)
       )
@@ -464,4 +461,4 @@ main(argc, argv) =
       cat_stdin(params)
     else
       parse_parameters(params, false, argc, argv, 1)
-end
+  end

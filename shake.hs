@@ -17,7 +17,7 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
 
     "target/hcat" %> \_ -> do
         need ["hs/cat.hs"]
-        cmd ["ghc", "-O", "hs/cat.hs", "-o", "target/hcat"]
+        cmd ["ghc-8.2.2", "-O", "hs/cat.hs", "-o", "target/hcat"]
 
     "lint" ~> do
         cmd_ ["hlint", "."]
@@ -35,7 +35,7 @@ main = shakeArgs shakeOptions { shakeFiles=".shake" } $ do
         need ["shake.hs"]
         cmd_ ["mkdir", "-p", ".shake"]
         command_ [Cwd ".shake"] "cp" ["../shake.hs", "."]
-        command [Cwd ".shake"] "ghc" ["-O2", "shake.hs", "-o", "../build", "-Wall", "-Werror", "-Wincomplete-uni-patterns", "-Wincomplete-record-updates"]
+        command [Cwd ".shake"] "ghc-8.2.2" ["-O2", "shake.hs", "-o", "../build", "-Wall", "-Werror", "-Wincomplete-uni-patterns", "-Wincomplete-record-updates"]
 
     "target/ac" %> \_ -> do
         ats <- getDirectoryFiles "" ["src//*.*ats"]

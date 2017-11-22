@@ -354,7 +354,7 @@ fun cat_file (params: &params, path: string) : void =
 fn strip_ansi (params: &params) : void =
   params.strip_ansi := true
 
-#define PROGRAM_VERSION "ats-cat version 0.1.4\nCopyright (c) 2017 Vanessa McHale\n"
+#define PROGRAM_VERSION "ats-cat version 0.1.5\nCopyright (c) 2017 Vanessa McHale\n"
 fn version() = prerr(PROGRAM_VERSION)
 
 // TODO strip out all the other junk; we mostly don't care.
